@@ -1,0 +1,23 @@
+{
+  "name": "pixichart",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npm run dev",
+    "build": "tsc && vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@pixi/ui": "^2.2.2",
+    "pixi-viewport": "^6.0.3",
+    "pixi.js": "8.9.1",
+    "puxi.js": "^0.0.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "eslint": "^9.16.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.2"
+  }
+}
