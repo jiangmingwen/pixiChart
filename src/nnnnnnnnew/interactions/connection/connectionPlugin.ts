@@ -1,19 +1,13 @@
-import { EventSystem, FederatedPointerEvent, Graphics, PointData } from "pixi.js";
-import { Graph } from "../Graph";
-import { BaseBlockShape } from "./BaseBlockShape";
-import { SEContainer } from "../override/container";
-import { SEGraphics } from "../override/graphics";
-import { SystemEventType } from "../SystemEvent";
+import { FederatedPointerEvent, Graphics } from "pixi.js";
+import { IValidFn, ShapeCache } from "./type";
+import { BlockShape } from "../../shapes/blocks/blockShape";
+import { SEGraphics } from "../../pixiOverrides/graphics";
+import { SystemEventType } from "../../utils/type";
+import { InteractionPlugin } from "../interactionPlugin";
 
-/**
- * 校验是否可以链接
- * @param lineType 连线类型
- * @param sourceId 起点shapeId 若为undefined 则为表示校验场景为：选择起点图元。若不为undefined 则表示校验场景为：选择终点图元。
- * @param targetId 终点shape 若为undefined 则为表示校验场景为：终点落在画布上。如果不为undefined 则表示校验场景为：选择终点图元。
- */
-export type IValidFn<T = any> = (lineType: T, sourceId?: string, targetId?: string) => boolean
 
-export class Connection {
+export class ConnectionPlugin extends InteractionPlugin {
+
     /** 是否处于连线模式 */
     private _isConnecting: boolean = false;
 
@@ -22,7 +16,7 @@ export class Connection {
     }
     /** 设置连接类型 */
     private connectingType: any;
-    private sourceShape?: BaseBlockShape;
+    private sourceShape?: BlockShape;
     private previewStartShape?: SEGraphics
     private previewEndShape?: SEGraphics
 
@@ -38,28 +32,30 @@ export class Connection {
         entryY: number
     }
 
-    /** 校验是否可连接方法 {@link IValidFn} */
-    private validFn?: IValidFn
-
-    constructor(public graph: Graph) {
+    init(): void {
         this.onConnectStart = this.onConnectStart.bind(this)
         this.onConnectProcess = this.onConnectProcess.bind(this)
         this.onConnectEnd = this.onConnectEnd.bind(this)
         this.graph.app.stage.on('mousedown', this.onConnectStart)
         this.graph.app.stage.on('mouseup', this.onConnectEnd)
+    }
+    destroy(): void {
 
     }
+
+    /** 校验是否可连接方法 {@link IValidFn} */
+    private validFn?: IValidFn
 
     onConnectStart(event: FederatedPointerEvent) {
         if (!this.connectingType) return // 没有连线类型
         // 找到点击的图形
-        const shape = this.graph.hitTest(event.globalX, event.globalY) as BaseBlockShape
+        const shape = this.graph.hitTest(event.globalX, event.globalY) as BlockShape
         if (!shape) return
-        this.graph.hignlight.hideConnecting()
+        this.interactions.hignlight.hideConnecting()
         const valided = this.validFn?.(this.connectingType, shape.id)
         if (valided === false) return // 校验不通过
-        this.sourceShape = shape as BaseBlockShape
-        this.graph.hignlight.showConnecting(this.sourceShape.id)
+        this.sourceShape = shape as BlockShape
+        this.interactions.hignlight.showConnecting(this.sourceShape.id)
         this.graph.app.stage.on('mousemove', this.onConnectProcess)
 
     }
@@ -73,7 +69,7 @@ export class Connection {
      * @returns 
      */
     findExitPoint(
-        shape: BaseBlockShape,
+        shape: BlockShape,
         globalX: number,
         globalY: number,
     ): [number, number] {
@@ -143,7 +139,7 @@ export class Connection {
      * 递归计算绝对坐标
      */
     getAbsolutePosition(
-        shape: BaseBlockShape
+        shape: BlockShape
     ) {
         let x = shape.x;
         let y = shape.y;
@@ -161,13 +157,13 @@ export class Connection {
     }
 
     // 全局缓存避免重复计算
-    shapeCache = new WeakMap<BaseBlockShape, ShapeCache>();
+    shapeCache = new WeakMap<BlockShape, ShapeCache>();
 
-    getShapeCache(shape: BaseBlockShape): ShapeCache {
+    getShapeCache(shape: BlockShape): ShapeCache {
         if (!this.shapeCache.has(shape)) {
             // 使用位运算加速坐标累加
             let absX = shape.x | 0, absY = shape.y | 0; // 转换为整数
-            let current: BaseBlockShape | undefined = shape;
+            let current: BlockShape | undefined = shape;
 
             while (current?.parentId) {
                 const parent = this.graph.getParentShape(current.id);
@@ -203,7 +199,7 @@ export class Connection {
 
 
     optimizeIntersection(
-        shape: BaseBlockShape,
+        shape: BlockShape,
         x1: number,
         y1: number,
         x2: number,
@@ -276,7 +272,7 @@ export class Connection {
 
 
     onConnectProcess(event: FederatedPointerEvent) {
-        const shape = this.graph.hitTest(event.globalX, event.globalY) as BaseBlockShape
+        const shape = this.graph.hitTest(event.globalX, event.globalY) as BlockShape
         if (!this.sourceShape) return
         if (shape === this.sourceShape) return
         let rx1 = 0, rx2 = 0, ry1 = 0, ry2 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0, dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
@@ -322,7 +318,7 @@ export class Connection {
 
 
 
-    private drawPreviewEnd(endShape: BaseBlockShape, rx: number, ry: number): [number, number, number, number] {
+    private drawPreviewEnd(endShape: BlockShape, rx: number, ry: number): [number, number, number, number] {
         if (!this.sourceShape) return [0, 0, 0, 0]
         if (this.previewEndShape) this.graph.app.stage.removeChild(this.previewEndShape)
         const shape = new SEGraphics()
@@ -375,8 +371,8 @@ export class Connection {
 
 
     onConnectEnd(event: FederatedPointerEvent) {
-        if(!this.isConnecting) return
-        if (!this.sourceData || !this.targetData){
+        if (!this.isConnecting) return
+        if (!this.sourceData || !this.targetData) {
             this.ready(this.connectingType)
             if (this.previewStartShape) this.graph.app.stage.removeChild(this.previewStartShape)
             if (this.previewEndShape) this.graph.app.stage.removeChild(this.previewEndShape)
@@ -388,7 +384,7 @@ export class Connection {
         if (this.previewStartShape) this.graph.app.stage.removeChild(this.previewStartShape)
         if (this.previewEndShape) this.graph.app.stage.removeChild(this.previewEndShape)
         this.graph.app.stage.off('mousemove', this.onConnectProcess)
-        this.graph.hignlight.hideConnecting()
+        this.interactions.hignlight.hideConnecting()
         this._isConnecting = false
 
         this.graph.events.begin()
@@ -419,7 +415,7 @@ export class Connection {
         this._isConnecting = true
         this.graph.idMapBlocks.forEach((shape) => {
             const valid = this.validFn?.(type, shape.id)
-            if (valid !== false) this.graph.hignlight.showConnecting(shape.id)
+            if (valid !== false) this.interactions.hignlight.showConnecting(shape.id)
         })
     }
 
@@ -436,68 +432,4 @@ export class Connection {
         this.validFn = fn
     }
 
-}
-
-export interface ShapeCache {
-    /**
-     * 图形在全局画布上的绝对X坐标（已累加所有父容器的偏移量）
-     * 计算方式：递归累加自身及所有父容器的x属性
-     */
-    absX: number;
-
-    /**
-     * 图形在全局画布上的绝对Y坐标（已累加所有父容器的偏移量）
-     * 计算方式：递归累加自身及所有父容器的y属性
-     */
-    absY: number;
-
-    /**
-     * 图形左边界在全局画布上的绝对X坐标
-     * 等价于 absX，预存避免重复计算
-     */
-    left: number;
-
-    /**
-     * 图形右边界在全局画布上的绝对X坐标
-     * 计算方式：absX + shape.width
-     */
-    right: number;
-
-    /**
-     * 图形上边界在全局画布上的绝对Y坐标
-     * 等价于 absY，预存用于快速范围检测
-     */
-    top: number;
-
-    /**
-     * 图形下边界在全局画布上的绝对Y坐标
-     * 计算方式：absY + shape.height
-     */
-    bottom: number;
-
-    /**
-     * 图形的原始宽度（不受缩放影响）
-     * 直接从 shape.width 获取，用于相对坐标计算
-     */
-    width: number;
-
-    /**
-     * 图形的原始高度（不受缩放影响）
-     * 直接从 shape.height 获取，用于相对坐标计算
-     */
-    height: number;
-
-    /**
-     * 宽度的倒数 (1/width)，预计算用于优化性能
-     * 用途：将绝对坐标转换为相对坐标时，用乘法替代除法
-     * 示例：relativeX = (x - absX) * invWidth
-     */
-    invWidth: number;
-
-    /**
-     * 高度的倒数 (1/height)，预计算用于优化性能
-     * 用途：将绝对坐标转换为相对坐标时，用乘法替代除法
-     * 示例：relativeY = (y - absY) * invHeight
-     */
-    invHeight: number;
 }

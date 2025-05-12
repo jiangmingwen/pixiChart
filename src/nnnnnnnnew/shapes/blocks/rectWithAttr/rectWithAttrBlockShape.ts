@@ -1,10 +1,12 @@
-import { GlobalStype } from "../../../shapes/GlobalStyle";
-import { SEGraphics } from "../../override/graphics";
-import { BaseBlockShape } from "../BaseBlockShape";
-import { IBoundsPoint } from "../BlockContainer";
-import { IBlockShape } from "../type";
 
-export class ClassBlockShape extends BaseBlockShape {
+import { BlockShape } from "../blockShape";
+import { IBoundsPoint } from "../type";
+
+export class RectWithAttrBlockShape extends BlockShape {
+
+    static get shapeType(): string {
+        return 'ClassBlockShape'
+    }
 
 
 
@@ -27,18 +29,14 @@ export class ClassBlockShape extends BaseBlockShape {
         const y = ry * this.height
         let dx = 0, dy = 0;
         if (x >= 0 && x < 40 && y < 40) {
-            dy = 40 
+            dy = 40
         }
 
-        if (x > 0.8 * this.width && y< 40) {
-            dy = 40 
+        if (x > 0.8 * this.width && y < 40) {
+            dy = 40
         }
 
         return [dx, dy]
-    }
-
-    static get name(): string {
-        return 'ClassBlockShape'
     }
 
 

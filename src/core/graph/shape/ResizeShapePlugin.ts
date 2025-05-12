@@ -1,12 +1,13 @@
-import { ShapePlugin } from "./plugin";
+
 import { FederatedPointerEvent, FillInput, Graphics, StrokeInput } from "pixi.js";
 import { GlobalStype } from "../../shapes/GlobalStyle";
 import { removeUndefined } from "./utils";
 import { IBlockShape } from "./type";
+import { GraphPlugin } from "./plugin";
 
 
 /** 图元缩放插件 */
-export class ResizeShapePlugin extends ShapePlugin {
+export class ResizeShapePlugin extends GraphPlugin {
     /** 激活边框上的点 */
     activePoints: Graphics[] = []
 

@@ -1,24 +1,7 @@
-import { Graph } from "./Graph";
-import { ILineShape } from "./shape/lines/LineShape";
-import { IBlockShape } from "./shape/type";
-
-export enum SystemEventType {
-    Resize = 'Resize',
-
-    Move = 'Move',
-
-
-    Scale = 'Scale',
-
-    Zindex = 'Zindex',
-
-    Nest = 'Nest',
-
-    DataChange = 'DataChange',
-
-    Connect = 'Connect'
-
-}
+import { Graph } from "../graph/graph";
+import { IBlockShape } from "../shapes/blocks/type";
+import { ILineShape } from "../shapes/lines/type";
+import { SystemEventType } from "./type";
 
 export class SystemEvent {
 
@@ -28,18 +11,26 @@ export class SystemEvent {
 
     lineUpdate: Record<string, Partial<ILineShape>> = {}
 
+    /**  记录批次  */
+    private batchCount = 0
 
     constructor(public graph: Graph) { }
 
     begin() {
-        this.blockUpdate = {}
-        this.lineUpdate = {}
+        if (this.batchCount <= 0) {
+            //批量更新标识>0表示已经开始批量收集数据了，不初始化
+            this.blockUpdate = {}
+            this.lineUpdate = {}
+        }
+        this.batchCount++
         return this
     }
 
     end() {
-        console.log('end :blockUpdate', this.blockUpdate)
-        console.log('end :lineUpdate', this.lineUpdate)
+        if(--this.batchCount <=0){
+            console.log('end :blockUpdate', this.blockUpdate)
+            console.log('end :lineUpdate', this.lineUpdate)
+        }
         // this.blockUpdate.clear();
     }
 
@@ -57,8 +48,6 @@ export class SystemEvent {
             this.lineUpdate[key] = Object.assign(existData, data[key])
         }
     }
-
-
 
     emit(type: SystemEventType, data?: Record<string, Partial<IBlockShape>>, lineData?: Record<string, Partial<ILineShape>>) {
         if (data) {

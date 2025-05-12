@@ -1,25 +1,26 @@
 import { FederatedPointerEvent } from "pixi.js";
-import { GraphPlugin } from "./plugin";
-import { BaseBlockShape } from "./BaseBlockShape";
+import { InteractionPlugin } from "../interactionPlugin";
+import { BlockShape } from "../../shapes/blocks/blockShape";
+
 
 /** 选中图元插件 */
-export class ActiveShapePlugin extends GraphPlugin {
+export class ActiveShapePlugin extends InteractionPlugin {
     /** 
      * 已激活的图元
      */
-    activedShapes: Map<string, BaseBlockShape> = new Map()
+    activedShapes: Map<string, BlockShape> = new Map()
 
-    private validate(shape: BaseBlockShape) {
+    private validate(shape: BlockShape) {
         return shape.options.selectable !== false
     }
 
-    setValidate(fn: (shape: BaseBlockShape) => boolean) {
+    setValidate(fn: (shape: BlockShape) => boolean) {
         this.validate = fn
     }
 
     private pointerdown(e: FederatedPointerEvent) {
         console.log(1,'1')
-        if (this.graph.connection.isConnecting) return
+        if (this.interactions.connection.isConnecting) return
         const shape = this.graph.hitTest(e.globalX, e.globalY)
         if (!shape) {
             this.clear()
@@ -31,13 +32,13 @@ export class ActiveShapePlugin extends GraphPlugin {
             this.clear()
         }
 
-        this.graph.hignlight.showActive(shape.id)
+        this.interactions.hignlight.showActive(shape.id)
         this.activedShapes.set(shape.id, shape)
     }
 
     /** 清除所有选中的图元 */
     clear() {
-        this.graph.hignlight.hideActive()
+        this.interactions.hignlight.hideActive()
         this.activedShapes.clear()
     }
 
@@ -51,6 +52,5 @@ export class ActiveShapePlugin extends GraphPlugin {
     override destroy(): void {
         this.graph.app.stage.off('pointerdown', this.pointerdown)
     }
-
 
 }

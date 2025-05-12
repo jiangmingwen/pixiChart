@@ -1,51 +1,11 @@
-import { GlobalStype } from "../../shapes/GlobalStyle"
-import { GraphPlugin } from "./plugin"
-import { SystemEventType } from "../SystemEvent"
-import { IBlockShape } from "./type"
+import { SystemEventType } from "../../../core/graph/SystemEvent"
+import { IBlockShape } from "../../shapes/blocks/type"
+import { InteractionPlugin } from "../interactionPlugin"
+import { hignlightStyleConfig } from "./config"
+import { EHighlightMode } from "./type"
 
-
-export enum EHighlightMode {
-    /** 基准高亮 */
-    Base = 'Base',
-    /** 连线高亮 */
-    Connecting = 'Connecting',
-    /** 嵌套高亮 */
-    Nest = 'Nest',
-    /** 选中图元的高亮 */
-    Active = 'Active',
-}
-
-
-export const hignlightStyleConfig: Record<EHighlightMode, IHignlightStyle> = {
-    [EHighlightMode.Base]: {
-        width: GlobalStype.BaseShapeHighlightWidth,
-        color: GlobalStype.BaseShapeHighlightColor,
-    },
-    [EHighlightMode.Connecting]: {
-        width: GlobalStype.ConnectingHighlightWidth,
-        color: GlobalStype.ConnectingHighlightColor,
-    },
-    [EHighlightMode.Nest]: {
-        width: GlobalStype.NestHighlightWidth,
-        color: GlobalStype.NestHighlightColor,
-    },
-    [EHighlightMode.Active]: {
-        width: GlobalStype.ActiveHighlightWidth,
-        color: GlobalStype.ActiveHighlightColor,
-    }
-}
-
-export interface IHignlightStyle {
-    /** 高亮的颜色 */
-    color: string
-    /** 高亮的线宽 */
-    width: number
-}
-
-
-
-
-export class Hignlight extends GraphPlugin {
+/** 高亮 */
+export class HignlightPlugin extends InteractionPlugin {
 
     // /** 嵌套高亮的图元 */
     private nestShape?: string
@@ -94,11 +54,11 @@ export class Hignlight extends GraphPlugin {
      */
     showNest(id: string) {
         if (this.nestShape === id) return
-        if(this.nestShape) {
+        if (this.nestShape) {
             // 取消嵌套高亮的图元，如果有选中图元，选中状态须保留
             const targetShape = this.graph.getShapeById(this.nestShape)
             if (!targetShape) return //要高亮的目标图元不存在，不做处
-            targetShape.updateBoundsStyle()
+            targetShape.restoreBoundsboxStroke()
         }
         this.show(id, EHighlightMode.Nest)
     }
@@ -106,7 +66,7 @@ export class Hignlight extends GraphPlugin {
      * @param id 要高亮显示的图元
     */
     showActive(id: string) {
-        if(this.activeShape[id]) return true
+        if (this.activeShape[id]) return true
         this.show(id, EHighlightMode.Active)
     }
 
@@ -116,7 +76,7 @@ export class Hignlight extends GraphPlugin {
         for (const id in this.connectingShapes) {
             const targetShape = this.graph.getShapeById(id)
             if (!targetShape) return //要高亮的目标图元不存在，不做处
-            targetShape.updateBoundsStyle()
+            targetShape.restoreBoundsboxStroke()
             this.hideEffectCache(id, EHighlightMode.Connecting)
         }
     }
@@ -130,9 +90,10 @@ export class Hignlight extends GraphPlugin {
         if (!targetShape) return //要高亮的目标图元不存在，不做处
         if (this.activeShape[this.baseShape]) {
             // 取消高亮的时候，如果选中状态，需要保留选中状态
-            targetShape.setStrokeStyle(hignlightStyleConfig[EHighlightMode.Active])
+            const style = hignlightStyleConfig[EHighlightMode.Active]
+            targetShape.updateBoundsboxStroke(style.color as number, style.width)
         } else {
-            targetShape.updateBoundsStyle()
+            targetShape.restoreBoundsboxStroke()
         }
     }
 
@@ -143,7 +104,10 @@ export class Hignlight extends GraphPlugin {
         const targetShape = this.graph.getShapeById(this.nestShape)
         this.hideEffectCache(this.nestShape, EHighlightMode.Nest)
         if (!targetShape) return //要高亮的目标图元不存在，不做处
-        targetShape.updateBoundsStyle()
+        // targetShape.updateBoundsStyle()
+        console.log('yinc')
+        targetShape.boundsbox.strokeStyle.color = 0x666666
+        targetShape.boundsbox.endFill()
     }
 
     /**
@@ -155,7 +119,7 @@ export class Hignlight extends GraphPlugin {
             // 指定隐藏某个图元的选中状态
             const targetShape = this.graph.getShapeById(id)
             if (!targetShape) return //要高亮的目标图元不存在，不做处理
-            targetShape.updateBoundsStyle()
+            targetShape.restoreBoundsboxStroke()
             delete this.activeShape[id]
             this.baseShape = undefined
             this.nestShape = undefined
@@ -163,7 +127,7 @@ export class Hignlight extends GraphPlugin {
             for (const id in this.activeShape) {
                 const targetShape = this.graph.getShapeById(id)
                 if (!targetShape) return //要高亮的目标图元不存在，不做处理
-                targetShape.updateBoundsStyle()
+                targetShape.restoreBoundsboxStroke()
             }
             this.activeShape = {}
             this.baseShape = undefined
@@ -180,7 +144,8 @@ export class Hignlight extends GraphPlugin {
     private show(id: string, mode: EHighlightMode): void {
         const targetShape = this.graph.getShapeById(id)
         if (!targetShape) return //要高亮的目标图元不存在，不做处理
-        targetShape.boundsbox.stroke(hignlightStyleConfig[mode])
+        const strokeStyle = hignlightStyleConfig[mode]
+        targetShape.updateBoundsboxStroke(strokeStyle.color as number, strokeStyle.width)
         this.cacheShape(id, mode)
     }
 
@@ -263,7 +228,7 @@ export class Hignlight extends GraphPlugin {
         for (const key in data) {
             const shape = this.graph.getShapeById(key)
             if (shape) {
-                shape.updateBoundsStyle()
+                shape.restoreBoundsboxStroke()
             }
         }
         this.baseShape = undefined

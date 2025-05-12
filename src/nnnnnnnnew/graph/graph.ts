@@ -1,35 +1,20 @@
-import { Application, ApplicationOptions } from "pixi.js";
-import { ScrollView } from "./ScrollView";
-import { SEBaseShape } from "../shapes/SEBaseShape";
-import { GlobalStype } from "../shapes/GlobalStyle";
-import { IEditSelectOptions, IOptions } from "./components/Select";
-import { QuickCreate } from "./QuickCreate";
-import { BaseBlockShape } from "./shape/BaseBlockShape";
-import { ClassType, IBlockShape } from "./shape/type";
-import { ActiveShapePlugin } from "./shape/ActiveShapePlugin";
-import { DragShapePlugin } from "./shape/DragShapePlugin"
-import { Connection } from "./shape/connection";
-import { Hignlight } from "./shape/hignlightPlugin";
-import { SEContainer } from "./override/container";
-import { ILineShape } from "./shape/lines/LineShape";
-import { SystemEvent } from "./SystemEvent";
+import { Application, ApplicationOptions } from "pixi.js"
+import { ScrollView } from "./scrollView"
+import { GlobalStyle } from "../config/globalStyle"
+import { IBlockData, IGraphOptions, IInteractions } from "./type"
+import { BlockShape } from "../shapes/blocks/blockShape"
+import { LineShape } from "../shapes/lines/lineShape"
+import { SEContainer } from "../pixiOverrides/container"
+import { ConnectionPlugin } from "../interactions/connection/connectionPlugin"
+import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
+import { DragPlugin } from "../interactions/drag/dragPlugin"
+import { ActiveShapePlugin } from "../interactions/active/activePlugin"
+import { IClassBlockShape } from "../type"
+import { SystemEvent } from "../events/systemEvent"
 
 
-
-export interface IGraphOptions {
-    /** 视图的宽 */
-    width: number
-    /** 视图的高 */
-    height: number
-    /** 画布挂载的根元素 */
-    el: HTMLElement
-    /** 视图id */
-    id: string
-}
-
-
+/** 结构性视图 */
 export class Graph {
-
     /** 视图id */
     readonly id: string
     /** pixi.js 实例 */
@@ -47,13 +32,7 @@ export class Graph {
     /** 画布 的缩放比例上限 */
     maxScale = 5
 
-    connection!: Connection
-
-    hignlight!: Hignlight
-
-    drag!: DragShapePlugin
-
-    active!: ActiveShapePlugin
+    interactions!: IInteractions
 
     events!: SystemEvent
 
@@ -62,8 +41,8 @@ export class Graph {
         return Number(this.scrollView.scale.x.toFixed(2))
     }
 
-    readonly idMapBlocks: Map<string, BaseBlockShape> = new Map()
-    readonly idMapLines: Map<string, SEBaseShape> = new Map()
+    readonly idMapBlocks: Map<string, BlockShape> = new Map()
+    readonly idMapLines: Map<string, LineShape> = new Map()
 
     constructor({ width, height, el, id }: IGraphOptions) {
         this.app = new Application()
@@ -81,11 +60,11 @@ export class Graph {
      * @returns 坐标点上的图元
      */
     hitTest(x: number, y: number, direct?: boolean) {
-        let shape: BaseBlockShape | undefined = this.app.renderer.events.rootBoundary.hitTest(x, y) as BaseBlockShape
+        let shape: BlockShape | undefined = this.app.renderer.events.rootBoundary.hitTest(x, y) as BlockShape
         if (direct === true) return shape;
         while (shape) {
-            if (!(shape instanceof BaseBlockShape)) {
-                shape = (shape as SEContainer).parent as BaseBlockShape
+            if (!(shape instanceof BlockShape)) {
+                shape = (shape as SEContainer).parent as BlockShape
             } else {
                 return shape
             }
@@ -146,7 +125,7 @@ export class Graph {
         return this.idMapBlocks.get(id as string)
     }
 
-    addChild(shape: BaseBlockShape, parent?: BaseBlockShape) {
+    addChild(shape: BlockShape, parent?: BlockShape) {
         if (parent) {
             parent.addChild(shape)
         } else {
@@ -187,17 +166,20 @@ export class Graph {
             diagramWidth: this.width
         })
         this.events = new SystemEvent(this)
-        this.connection = new Connection(this)
-        this.active = new ActiveShapePlugin(this)
-        this.drag = new DragShapePlugin(this)
-        this.hignlight = new Hignlight(this)
+        this.interactions = {
+            connection: new ConnectionPlugin(this),
+            active: new ActiveShapePlugin(this),
+            drag: new DragPlugin(this),
+            hignlight: new HignlightPlugin(this)
+        }
     }
 
     /** 创建shape */
-    createShape<T extends BaseBlockShape = any>(config: IBlockData) {
+    createShape<T extends BlockShape = any>(config: IBlockData) {
         const GraphicClass = Graph.graphicTypes.get(config.graphType);
         if (!GraphicClass) throw new Error(`Unregistered graphic type: ${config.graphType}`);
-        const shape = new GraphicClass(this, config) as unknown as T;
+        //@ts-ignore
+        const shape = new GraphicClass(this, config) as unknown as T; // 默认抽象类已经都实现
         return shape
     }
 
@@ -211,24 +193,24 @@ export class Graph {
     }
 
     /** 获取父shape */
-    getParentShape(shapeId: string): undefined | BaseBlockShape {
+    getParentShape(shapeId: string): undefined | BlockShape {
         const shape = this.getShapeById(shapeId)
-        if(!shape || !shape.parentId) return undefined
+        if (!shape || !shape.parentId) return undefined
         return this.getShapeById(shape.parentId)
     }
 
-    quickCreateInstance?: QuickCreate
-    quickCreateInfo?: IQuickCreateInfo
+    // quickCreateInstance?: QuickCreate
+    // quickCreateInfo?: IQuickCreateInfo
 
 
     /** 已注册的图形存放库 */
-    private static graphicTypes: Map<string, ClassType<BaseBlockShape>> = new Map();
+    private static graphicTypes: Map<string, typeof BlockShape> = new Map();
     /**
      * 注册图形方法
      * @param shape 注册的图形 shape | shape[]
      * @returns 
      */
-    static registerShape(shape: ClassType<BaseBlockShape> | (ClassType<BaseBlockShape>)[]) {
+    static registerShape(shape: IClassBlockShape | IClassBlockShape[]) {
         if (Array.isArray(shape)) {
             shape.forEach(this.__registrerShape.bind(this))
         } else {
@@ -241,14 +223,14 @@ export class Graph {
      * @param shape 注册单个图形方法
      * @returns 
      */
-    private static __registrerShape(shape: ClassType<BaseBlockShape>) {
-        if (this.graphicTypes.has(shape.name)) throw new Error(`Shape has already been registered: ${shape.name}`);
-        this.graphicTypes.set(shape.name, shape);
+    private static __registrerShape<T extends IClassBlockShape>(shape: T) {
+        if (this.graphicTypes.has(shape.shapeType)) throw new Error(`Shape has already been registered: ${shape.shapeType}`);
+        this.graphicTypes.set(shape.shapeType, shape);
         return this
     }
 
     /** 获取离屏canvas dom */
-    static getOffScreenElement()  {
+    static getOffScreenElement() {
         const id = 'pixi-offscreen'
         let canvas = document.getElementById(id)
         if (canvas) return canvas as HTMLCanvasElement
@@ -259,63 +241,10 @@ export class Graph {
     }
 
     /** 设置主题 */
-    static setTheme(theme: Partial<typeof GlobalStype>) {
-        Object.assign(GlobalStype,theme)
+    static setTheme(theme: Partial<typeof GlobalStyle>) {
+        Object.assign(GlobalStyle, theme)
+
     }
-}
 
 
-
-
-export interface IQuickCreateInfo {
-    lineKey: string
-    blockKey: string
-}
-
-export interface IPreview {
-    graphType: string
-    defaultWidth: number
-    defaultHeight: number
-    title?: string
-    stereotype?: string
-}
-
-
-export interface IQuickStartMenu {
-    lineType: IOptions
-    blockTypes: IOptions[]
-}
-
-export interface IQuickStart extends IEditSelectOptions {
-    menus: IQuickStartMenu[]
-}
-
-
-export interface IGraphExternalCallback {
-    getPreview: (key: string) => IPreview | void | undefined
-
-
-}
-
-
-
-// export interface ILinkNode {
-//     shape: BaseBlockShape
-//     child?: ILinkNode
-//     sibling?: ILinkNode
-//     parent?: ILinkNode
-// }
-
-
-// 首先是shape的类型，包含了父级，孩子
-
-// shape 可以找到子节点   子节点可以找到父节点
-
-// 更新数据的类型
-export interface IBlockData extends IBlockShape {
-    graphType: string
-}
-
-export interface ILineData extends ILineShape {
-    graphType: string
 }

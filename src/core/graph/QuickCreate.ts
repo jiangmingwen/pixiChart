@@ -35,19 +35,19 @@ export class QuickCreate extends Container {
     }
 
     show() {
-        const directions = [Direction.left, Direction.right, Direction.top, Direction.bottom]
-        let hasShow = false
-        directions.forEach(dir => {
-            const quickStart = this.tartgetShape.graph.getQuickStart(this.tartgetShape.id, dir);
-            if (quickStart?.menus?.length) {
-                this.createButtons(quickStart, dir)
-                hasShow = true
-            }
-        })
-        if (hasShow) {
+        // const directions = [Direction.left, Direction.right, Direction.top, Direction.bottom]
+        // let hasShow = false
+        // directions.forEach(dir => {
+        //     const quickStart = this.tartgetShape.graph.getQuickStart(this.tartgetShape.id, dir);
+        //     if (quickStart?.menus?.length) {
+        //         this.createButtons(quickStart, dir)
+        //         hasShow = true
+        //     }
+        // })
+        // if (hasShow) {
 
-        }
-        return this
+        // }
+        // return this
     }
 
 
@@ -221,7 +221,7 @@ export class QuickCreate extends Container {
         select.onSelect = (v) => {
             console.log(v)
             this.hide()
-            const info = this.graph.getPreview(v)
+            // const info = this.graph.getPreview(v)
             // this.graph.quickCreateInfo = {
             //     lineKey: v
             // }

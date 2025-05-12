@@ -1,15 +1,21 @@
 import { Application, Assets, FillInput, PointData, Sprite, StrokeInput, StrokeStyle } from "pixi.js";
-import { Graph } from "../Graph";
-import { IBlockShape } from "./type";
-import { GlobalStype } from "../../shapes/GlobalStyle";
-import { SEGraphics } from "../override/graphics";
-import { BlockContainer, IBoundsPoint } from "./BlockContainer";
+import { BlockContainer } from "./blockContainer";
+import { GlobalStype } from "../../../core/shapes/GlobalStyle";
+import { Graph } from "../../graph/graph";
+import { SEGraphics } from "../../pixiOverrides/graphics";
+import { IBlockShape, IBlockSize, IBoundsPoint } from "./type";
 
 
-export abstract class BaseBlockShape extends BlockContainer implements IBlockShape {
+/** blockshape */
+export abstract class BlockShape extends BlockContainer implements IBlockShape {
 
-    static get name(): string {
-        throw new Error('必须定义Shape的静态属性name,eg: static get name(): string { return "shape名称" }')
+    static get shapeType(): string {
+        throw new Error(`${this.name}类,必须定义Shape的静态属性name,eg: static get shapeType(): string { return "string" }`)
+    }
+
+    /** shape的边界尺寸 */
+    static get boundSize(): IBlockSize {
+        return {}
     }
 
     //TODO:  图标为自定义渲染
@@ -48,7 +54,7 @@ export abstract class BaseBlockShape extends BlockContainer implements IBlockSha
 
     parentId?: string
 
-    childList?: BaseBlockShape[];
+    childList?: BlockShape[];
 
     get graphScale(): number {
         return this.graph.scale
@@ -66,17 +72,9 @@ export abstract class BaseBlockShape extends BlockContainer implements IBlockSha
         this.styles = options
         this.parentId = options.parentId
         this.init()
-        this.updateBoundsStyle()
     }
 
-
-
-    /** 更新边界样式 */
-    updateBoundsStyle() {
-        this.fillStyle = this.getFillStyle()
-        this.strokeStyle = this.getStrokeStyle()
-        this.drawBoundsbox()
-    }
+  
 
     /** 计算可见图的外框 */
     abstract calcVisibleBounds(): IBoundsPoint
@@ -95,53 +93,7 @@ export abstract class BaseBlockShape extends BlockContainer implements IBlockSha
         })
     }
 
-    setStrokeStyle(style: StrokeInput, render?: boolean) {
-        this.strokeStyle = style
-        if (render) this.drawBoundsbox()
-    }
-
-    setFillStyle(style: FillInput, render?: boolean) {
-        this.fillStyle = style
-        if (render) this.drawBoundsbox()
-    }
-
-    /** 重置样式 */
-    resetStyle() {
-        this.fillStyle = this.getFillStyle()
-        this.strokeStyle = this.getStrokeStyle()
-        this.drawBoundsbox()
-    }
-
-    /** 重置样式 */
-    resetStyleByOptions() {
-        this.fillStyle = this.getFillStyle()
-        this.strokeStyle = this.getStrokeStyle()
-        this.drawBoundsbox()
-
-    }
-
-    private getStrokeStyle() {
-        const strokeStyle: StrokeStyle = {
-            color: this.options.strokeColor ?? GlobalStype.strokeColor,
-            width: this.options.strokeWidth ?? GlobalStype.strokeWidth,
-        }
-        if (this.options.strokeAlpha) {
-            strokeStyle.alpha = this.options.strokeAlpha
-        }
-        return strokeStyle
-    }
-
-    private getFillStyle() {
-        const fillStyle: FillInput = { color: 'transparent' }
-        if (this.options.fillColor) {
-            fillStyle.color = this.options.fillColor
-        }
-        if (this.options.fillAlpha) {
-            fillStyle.alpha = this.options.fillAlpha
-        }
-        return fillStyle
-    }
-
+  
 
     private onResize(data: Record<string, Partial<IBlockShape>>) {
         const changeData = data[this.id]
@@ -163,7 +115,6 @@ export abstract class BaseBlockShape extends BlockContainer implements IBlockSha
 
     destroy() {
         super.destroy()
-        this.destroy()
     }
 
     updateSize(width: number, height: number) {
@@ -235,9 +186,9 @@ export abstract class BaseBlockShape extends BlockContainer implements IBlockSha
     }
 
     /** 获取相当于画布的绝对坐标 */
-    getGlobalPoint(shape?: BaseBlockShape) {
-        let globalX = shape? shape.x: this.x, globalY = shape?shape.y: this.y
-        let parent = this.graph.getParentShape(shape?shape.id:this.id) 
+    getGlobalPoint(shape?: BlockShape) {
+        let globalX = shape ? shape.x : this.x, globalY = shape ? shape.y : this.y
+        let parent = this.graph.getParentShape(shape ? shape.id : this.id)
         while (parent) {
             globalX += parent.x
             globalY += parent.y
@@ -250,7 +201,7 @@ export abstract class BaseBlockShape extends BlockContainer implements IBlockSha
     }
 
 
-    getRelativePoint(globalPoint: PointData, parent?: BaseBlockShape) {
+    getRelativePoint(globalPoint: PointData, parent?: BlockShape) {
         const parentGlobalPoint = parent ? this.getGlobalPoint(parent) : { x: 0, y: 0 }
         return {
             x: globalPoint.x - parentGlobalPoint.x,

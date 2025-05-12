@@ -1,11 +1,18 @@
 import './index.css'
-import { Graph } from './core/graph/Graph';
-import { ClassBlockShape } from './core/graph/shape/blocks/classBlockShape';
+import { Graph } from './nnnnnnnnew/graph/graph';
+import { RectWithAttrBlockShape } from './nnnnnnnnew/shapes/blocks/rectWithAttr/rectWithAttrBlockShape';
+import { RectWithHeaderBlockShape } from './nnnnnnnnew/shapes/blocks/rectWithHeader/rectWithHeaderBlockShape';
+import { RectBlockShape } from './nnnnnnnnew/shapes/blocks/rect/rectBlockShape';
+// import { Graph } from './core/graph/Graph';
+// import { ClassBlockShape } from './core/graph/shape/blocks/classBlockShape';
 
 (async () => {
   const dom = document.getElementById("pixi-container")!
 
-  Graph.registerShape([ ClassBlockShape])
+  Graph.registerShape([RectWithAttrBlockShape, RectWithHeaderBlockShape, RectBlockShape])
+
+
+  console.log(RectWithHeaderBlockShape.name,'xxx')
 
   const app = new Graph({
     el: dom,
@@ -18,9 +25,35 @@ import { ClassBlockShape } from './core/graph/shape/blocks/classBlockShape';
     resizeTo: dom,
   });
 
-  
+
 
   app.updateData([
+    {
+      id: '1112345',
+      x: 240,
+      y: 120,
+      width: 100,
+      height: 50,
+      zIndex: 1,
+      graphType: RectBlockShape.shapeType,
+      label: '事件1_1',
+      stereotype: '事件',
+      stereotypeVisible: true
+
+    },
+    {
+      id: '112345',
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 100,
+      zIndex: 1,
+      graphType: RectWithHeaderBlockShape.shapeType,
+      label: '包_1',
+      stereotype: 'Package',
+      stereotypeVisible: false
+
+    },
     {
       id: '12345',
       x: 50,
@@ -28,17 +61,17 @@ import { ClassBlockShape } from './core/graph/shape/blocks/classBlockShape';
       width: 100,
       height: 100,
       zIndex: 1,
-      graphType: ClassBlockShape.name,
+      graphType: RectWithAttrBlockShape.shapeType,
       parentId: '1234',
 
     }, {
       id: '1234',
-      x: 100,
-      y: 100,
+      x: 300,
+      y: 300,
       width: 200,
       height: 200,
       zIndex: 2,
-      graphType: ClassBlockShape.name,
+      graphType: RectWithAttrBlockShape.shapeType,
     },
     {
       id: '12346',
@@ -47,119 +80,19 @@ import { ClassBlockShape } from './core/graph/shape/blocks/classBlockShape';
       width: 200,
       height: 200,
       zIndex: 2,
-      graphType: ClassBlockShape.name,
-      fillColor: '#f1f100',
+      graphType: RectWithAttrBlockShape.shapeType,
     }
   ], [])
 
-  
 
-  // app.getPreview = ()=> {
-  //   return {
-  //     graphType: ClassBlockShape.name,
-  //     defaultHeight: 200,
-  //     defaultWidth: 200,
-  //     stereotype: 'xxxx',
-  //     title: '模块'
-  //   }
-  // }
+  const button = document.createElement('button')
+  button.innerText = '选择连线'
+  button.onclick = () => {
+    app.interactions.connection.ready('lineS')
 
-  // new BaseBlockShape(app,{
-  //   id: '1234',
-  //   x: 500,
-  //   y: 500,
-  //   width: 200,
-  //   height: 200,
-  // })
+  }
 
-  // const s = new BaseBlockShape(app,{
-  //   id: '12345',
-  //   x: 500,
-  //   y: 200,
-  //   width: 100,
-  //   height: 100
-  // })
-  // // 设置图形loading
-  // // s.loading.showLoading('red',5)
+  document.getElementById('ppp')?.appendChild(button)
 
-
-  // new BaseBlockShape(app,{
-  //   id: '123',
-  //   x: 380,
-  //   y: 330,
-  //   width: 100,
-  //   minHeight: 80,
-  //   maxHeight: 300,
-  //   minWidth: 100,
-  //   maxWidth: 400,
-  //   height: 100,
-  //   fillColor: '#fff000',
-  //   fillBgImg: 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg'
-  // })
-
-
-
-
-
-  // rect.pixiObject.onclick = (e)=>{
-  //   console.log(e,'e')
-  //   circle.pixiObject.x += 100;
-  // }
-
-  // const shape = app.createShape({
-  //   radius: 30,
-  //   color: 0xff0000,
-  //   x: 180,
-  //   y: 100,
-  //   graphicType: ClassBlockShape.name,
-  // });
-  // const graphics = new Graphics();
-  // graphics.rect(180, 330, 100, 100);
-  // graphics.stroke(0xff002f);
-  // app.app.stage.addChild(graphics)
-
-  //   const container = new Container();
-  //   container.x = 100
-  //   container. y = 100
-
-  // const graphics = new Graphics();
-  // graphics.rect(0, 0, 200, 200);
-  // graphics.stroke(0xff0000);
-
-  //   const graphics2= new Graphics();
-
-  //   graphics2.rect(10, 10, 100, 100);
-  //   graphics2.stroke(0x650a5a);
-
-  //   graphics.addChild(graphics2);
-
-  //   container.addChild(graphics)
-
-  // console.log(graphics.parent)
-  // console.log(graphics2.parent)
-
-  //   const graphics3 = new Graphics();
-  //   graphics3.rect(10, 110, 100, 100);
-  //   graphics3.stroke(0x0000ff);
-  //   app.app.stage.addChild(graphics3);
-
-  //   app.app.stage.addChild(container);
-
-  // app.addChild(block);
-
-
-
-  // // 添加到舞台
-  // app.addChild(circle);
-  // app.addChild(rect);
-
-
-  // 使用插件扩展的方法
-  // const randomCircle = app.createRandomCircle();
-
-  // 运行动画
-  // app.app.ticker.add(() => {
-  //   app.emit('update'); // 触发插件更新
-  // });
 })();
 

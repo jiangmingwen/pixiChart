@@ -1,4 +1,5 @@
 import { Container, ContainerOptions } from "pixi.js";
+import { SEGraphics } from "./graphics";
 
 
 export class SEContainer extends Container {

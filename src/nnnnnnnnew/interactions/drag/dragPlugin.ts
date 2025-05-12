@@ -1,21 +1,16 @@
 import { FederatedPointerEvent } from "pixi.js";
-import { GraphPlugin } from "./plugin";
-import { BaseBlockShape } from "./BaseBlockShape";
-import { IPoint } from "./type";
-import { EHighlightMode } from "./hignlightPlugin";
-import { clamp } from "./utils";
-import { GlobalStype, MaxLayer } from "../../shapes/GlobalStyle";
-import { SystemEventType } from "../SystemEvent";
+import { InteractionPlugin } from "../interactionPlugin";
+import { MaxLayer, GlobalStype } from "../../../core/shapes/GlobalStyle";
+import { BlockShape } from "../../shapes/blocks/blockShape";
+import { SystemEventType } from "../../utils/type";
+import { clamp } from "../../utils/utils";
+import { INestValidFn } from "./type";
 
 
-/** 嵌套图元校验函数
- * @param id 图元id
- * @param parentId 父图元id 不存在表示拖拽到画布上
- */
-export type INestValidFn = (id: string, parentId?: string) => boolean
+
 
 /** 拖拽图元插件 */
-export class DragShapePlugin extends GraphPlugin {
+export class DragPlugin extends InteractionPlugin {
 
     /** 拖拽开始坐标 */
     private dragStartPosition?: {
@@ -26,17 +21,14 @@ export class DragShapePlugin extends GraphPlugin {
     }
 
     /** 可以嵌套的父图元 */
-    nestParentShape?: BaseBlockShape
+    nestParentShape?: BlockShape
 
     private isDragging = false
 
     /** 鼠标拖动的基准图元 */
-    baseShape?: BaseBlockShape
-
-
+    baseShape?: BlockShape
 
     private nestValid?: INestValidFn
-
 
     init() {
         this.onDragEnd = this.onDragEnd.bind(this)
@@ -54,8 +46,8 @@ export class DragShapePlugin extends GraphPlugin {
 
 
     private onDragStart(e: FederatedPointerEvent) {
-        if(this.graph.connection.isConnecting) return
-        if (this.graph.active.activedShapes.size === 0 ) return
+        if(this.interactions.connection.isConnecting) return
+        if (this.interactions.active.activedShapes.size === 0 ) return
         if (this.dragStartPosition) return
         this.graph.app.stage.on('pointermove', this.onDragMove)
     }
@@ -99,11 +91,8 @@ export class DragShapePlugin extends GraphPlugin {
         this.dragStartPosition = undefined
         this.baseShape = undefined
         this.nestParentShape = undefined
-        this.graph.hignlight.hideNest()
+        this.interactions.hignlight.hideNest()
     }
-
-
-
 
 
     private onDragMove(e: FederatedPointerEvent) {
@@ -113,15 +102,14 @@ export class DragShapePlugin extends GraphPlugin {
             const shape = this.graph.hitTest(e.globalX, e.globalY)
             this.graph.events.begin()
             if (shape) {
-
                 // 拖拽的鼠标上有图元
                 this.isDragging = true
                 this.baseShape = shape
-                const baseShapeGlobalPoint = this.baseShape.getGlobalPoint()
-                this.baseShape.parent.removeChild(shape)
+                const baseShapeGlobalPoint = shape.getGlobalPoint()
+                shape.parent.removeChild(shape)
                 this.graph.addChild(this.baseShape)
-                this.baseShape.x = baseShapeGlobalPoint.x
-                this.baseShape.y = baseShapeGlobalPoint.y
+                shape.x = baseShapeGlobalPoint.x
+                shape.y = baseShapeGlobalPoint.y
                 this.dragStartPosition = {
                     x: baseShapeGlobalPoint.x,
                     y: baseShapeGlobalPoint.y,
@@ -143,11 +131,11 @@ export class DragShapePlugin extends GraphPlugin {
         if (this.nestParentShape) {
             if (targetShape && this.nestParentShape !== targetShape) {
                 // 如果之前存在高亮的图元,先隐藏，再高亮现在的图元
-                this.graph.hignlight.showNest(targetShape.id)
+                this.interactions.hignlight.showNest(targetShape.id)
             }
         } else {
-            if (targetShape) this.graph.hignlight.showNest(targetShape.id)
-            else this.graph.hignlight.hideNest()
+            if (targetShape) this.interactions.hignlight.showNest(targetShape.id)
+            else this.interactions.hignlight.hideNest()
 
         }
         this.nestParentShape = targetShape

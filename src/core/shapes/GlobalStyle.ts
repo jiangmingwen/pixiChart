@@ -30,7 +30,10 @@ export const GlobalStype = {
     ActiveHighlightWidth: 1,
     /** 安全距离 */
     SafePadding: 6,
+
 }
+
+export const MaxLayer = 100000;
 
  
 
@@ -40,3 +43,4 @@ export enum Direction {
     top = 'top',
     bottom = 'bottom',
 }
+
