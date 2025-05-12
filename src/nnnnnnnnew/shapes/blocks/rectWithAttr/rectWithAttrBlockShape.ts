@@ -1,16 +1,14 @@
 
 import { BlockShape } from "../blockShape";
-import { IBoundsPoint } from "../type";
+import type { IBoundsPoint } from "../type";
 
 export class RectWithAttrBlockShape extends BlockShape {
 
-    static get shapeType(): string {
+    static override get shapeType(): string {
         return 'ClassBlockShape'
     }
 
-
-
-    calcVisibleBounds(): IBoundsPoint {
+    static override get boundsPoint() {
         return [
             [40, 0],
             [0.8, 0],
@@ -21,7 +19,11 @@ export class RectWithAttrBlockShape extends BlockShape {
             [0, 40],
             [40, 40],
             [40, 0]
-        ]
+        ] as IBoundsPoint
+    }
+
+    calcVisibleBounds(): IBoundsPoint {
+        return RectWithAttrBlockShape.boundsPoint
     }
 
     getOffsetPosition(rx: number, ry: number) {

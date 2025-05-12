@@ -1,9 +1,9 @@
 import { BlockShape } from "../blockShape";
-import { IBoundsPoint } from "../type";
+import type { IBoundsPoint } from "../type";
 
 export class EllipseBlockShape extends BlockShape {
 
-    
+
 
     calcVisibleBounds(): IBoundsPoint {
         throw new Error("Method not implemented.");
@@ -11,5 +11,5 @@ export class EllipseBlockShape extends BlockShape {
     init(): void {
         throw new Error("Method not implemented.");
     }
-    
+
 }

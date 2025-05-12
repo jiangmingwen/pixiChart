@@ -1,8 +1,8 @@
 import { Viewport, } from "pixi-viewport";
+import type { DragEvent } from "pixi-viewport/dist/types";
 import { Container, FederatedWheelEvent, Graphics } from "pixi.js";
-import { DragEvent } from "pixi-viewport/dist/types";
-import { Graph } from "./graph";
 import { GlobalStyle } from "../config/globalStyle";
+import { Graph } from "./graph";
 
 /** 画布啊滚动条 */
 export class ScrollBar extends Container {

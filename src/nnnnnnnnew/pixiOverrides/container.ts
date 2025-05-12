@@ -1,5 +1,5 @@
-import { Container, ContainerOptions } from "pixi.js";
-import { SEGraphics } from "./graphics";
+import type { ContainerOptions } from "pixi.js";
+import { Container } from "pixi.js";
 
 
 export class SEContainer extends Container {
@@ -18,7 +18,7 @@ export class SEContainer extends Container {
         this.__height = value;
     }
 
-    
+
 
     constructor(options?: ContainerOptions) {
         super(options);

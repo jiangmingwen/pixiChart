@@ -1,4 +1,5 @@
-import { Sprite, SpriteOptions } from "pixi.js";
+import type { SpriteOptions } from "pixi.js";
+import { Sprite } from "pixi.js";
 
 export class SESprite extends Sprite {
     __width: number = 0;

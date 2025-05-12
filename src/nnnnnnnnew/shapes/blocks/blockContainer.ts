@@ -1,8 +1,9 @@
-import { Assets, DestroyOptions, FillInput, Sprite, StrokeInput, StrokeStyle } from "pixi.js";
+import type { DestroyOptions, FillInput, StrokeStyle } from "pixi.js";
+import { Assets, Sprite } from "pixi.js";
+import { GlobalStyle } from "../../config/globalStyle";
 import { SEContainer } from "../../pixiOverrides/container";
 import { SEGraphics } from "../../pixiOverrides/graphics";
-import { IBlockContainerOptions, IBoundsPoint } from "./type";
-import { GlobalStyle } from "../../config/globalStyle";
+import type { IBlockContainerOptions, IBoundsPoint } from "./type";
 
 /** Block容器 */
 export abstract class BlockContainer extends SEContainer {
@@ -46,7 +47,13 @@ export abstract class BlockContainer extends SEContainer {
 
 
     /** 可见图的外框 */
-    private visibleBounds: number[][] = []
+    private visibleBounds: IBoundsPoint = []
+
+
+    /** 边界点 */
+    static get boundsPoint(): IBoundsPoint {
+        return []
+    }
 
     /** 计算可见图的外框 */
     abstract calcVisibleBounds(): IBoundsPoint
@@ -111,28 +118,35 @@ export abstract class BlockContainer extends SEContainer {
             zIndex: -1,
             cursor: 'pointer'
         })
-
-
-        this.visibleBounds.forEach((item, index) => {
-            let x = item[0]
-            if (Math.abs(x) <= 1) {
-                x = item[0] * this.width
-            }
-            let y = item[1]
-            if (Math.abs(y) <= 1) {
-                y = item[1] * this.height
-            }
-
-            if (index === 0) {
-                boundsbox.moveTo(x, y)
-            } else {
-                boundsbox.lineTo(x, y)
-            }
-        })
+        BlockContainer.drawBoundsGeometry(this.visibleBounds, boundsbox)
         boundsbox.closePath()
         boundsbox.stroke(strokeStyle).fill(fillStyle)
         this.boundsbox = this.addChild(boundsbox)
     }
+
+    static drawBoundsGeometry(boundsPoint: IBoundsPoint, geo: SEGraphics, scale: number = 1) {
+        boundsPoint.forEach((item, index) => {
+            let x = item[0]
+            if (Math.abs(x) <= 1) {
+                x = item[0] * geo.width
+            }
+            let y = item[1]
+            if (Math.abs(y) <= 1) {
+                y = item[1] * geo.height
+            }
+            x = x * scale
+            y = y * scale
+            if (index === 0) {
+                geo.moveTo(x, y)
+            } else {
+                geo.lineTo(x, y)
+            }
+        })
+        geo.closePath()
+        return geo
+    }
+
+
 
     /** 更新边界框的边框样式 */
     updateBoundsboxStroke(color: number, width?: number) {

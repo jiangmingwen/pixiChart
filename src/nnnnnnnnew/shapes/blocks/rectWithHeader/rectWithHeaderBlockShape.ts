@@ -1,8 +1,8 @@
-import { Graphics, TextStyle, Text } from "pixi.js";
-import { BlockShape } from "../blockShape";
-import { IBoundsPoint } from "../type";
-import { minHeight, relativeWidth } from "./config";
+import { Graphics, Text, TextStyle } from "pixi.js";
 import { GlobalStyle } from "../../../config/globalStyle";
+import { BlockShape } from "../blockShape";
+import type { IBoundsPoint } from "../type";
+import { minHeight, relativeWidth } from "./config";
 
 export class RectWithHeaderBlockShape extends BlockShape {
 
@@ -17,8 +17,7 @@ export class RectWithHeaderBlockShape extends BlockShape {
         }
     }
 
-
-    calcVisibleBounds(): IBoundsPoint {
+    static override get boundsPoint() {
         return [
             [0, 0],
             [relativeWidth, 0],
@@ -28,10 +27,14 @@ export class RectWithHeaderBlockShape extends BlockShape {
             [0, 1],
             [0, 0]
 
-        ]
+        ] as IBoundsPoint
     }
 
-    
+
+    calcVisibleBounds(): IBoundsPoint {
+        return RectWithHeaderBlockShape.boundsPoint
+    }
+
 
     init(): void {
         this.drawHeaderLine()

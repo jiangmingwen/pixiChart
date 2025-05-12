@@ -1,6 +1,6 @@
 import { Graph } from "../graph/graph";
-import { IBlockShape } from "../shapes/blocks/type";
-import { ILineShape } from "../shapes/lines/type";
+import type { IBlockShape } from "../shapes/blocks/type";
+import type { ILineShape } from "../shapes/lines/type";
 import { SystemEventType } from "./type";
 
 export class SystemEvent {
@@ -27,7 +27,7 @@ export class SystemEvent {
     }
 
     end() {
-        if(--this.batchCount <=0){
+        if (--this.batchCount <= 0) {
             console.log('end :blockUpdate', this.blockUpdate)
             console.log('end :lineUpdate', this.lineUpdate)
         }

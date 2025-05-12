@@ -1,5 +1,6 @@
-import { SystemEventType } from "../../../core/graph/SystemEvent"
-import { IBlockShape } from "../../shapes/blocks/type"
+
+import { SystemEventType } from "../../events/type"
+import type { IBlockShape } from "../../shapes/blocks/type"
 import { InteractionPlugin } from "../interactionPlugin"
 import { hignlightStyleConfig } from "./config"
 import { EHighlightMode } from "./type"

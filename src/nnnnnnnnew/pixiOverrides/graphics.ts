@@ -1,8 +1,9 @@
-import { Graphics, GraphicsOptions } from "pixi.js";
+import type { GraphicsOptions } from "pixi.js";
+import { Graphics } from "pixi.js";
 
 export class SEGraphics extends Graphics {
     id!: string;
-    
+
     __width: number = 0;
 
     __height: number = 0;
@@ -25,10 +26,10 @@ export class SEGraphics extends Graphics {
 
     constructor(options?: GraphicsOptions) {
         super(options);
-        if(options?.width){
+        if (options?.width) {
             this.width = options.width
         }
-        if(options?.height){
+        if (options?.height) {
             this.height = options.height
         }
     }

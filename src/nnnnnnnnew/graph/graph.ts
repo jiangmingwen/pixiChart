@@ -1,16 +1,17 @@
-import { Application, ApplicationOptions } from "pixi.js"
-import { ScrollView } from "./scrollView"
+import type { ApplicationOptions } from "pixi.js"
+import { Application, } from "pixi.js"
 import { GlobalStyle } from "../config/globalStyle"
-import { IBlockData, IGraphOptions, IInteractions } from "./type"
+import { SystemEvent } from "../events/systemEvent"
+import { ActiveShapePlugin } from "../interactions/active/activePlugin"
+import { ConnectionPlugin } from "../interactions/connection/connectionPlugin"
+import { DragPlugin } from "../interactions/drag/dragPlugin"
+import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
+import { SEContainer } from "../pixiOverrides/container"
 import { BlockShape } from "../shapes/blocks/blockShape"
 import { LineShape } from "../shapes/lines/lineShape"
-import { SEContainer } from "../pixiOverrides/container"
-import { ConnectionPlugin } from "../interactions/connection/connectionPlugin"
-import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
-import { DragPlugin } from "../interactions/drag/dragPlugin"
-import { ActiveShapePlugin } from "../interactions/active/activePlugin"
-import { IClassBlockShape } from "../type"
-import { SystemEvent } from "../events/systemEvent"
+import type { IClassBlockShape } from "../type"
+import { ScrollView } from "./scrollView"
+import type { IBlockData, IGraphOptions, IInteractions, ILineData } from "./type"
 
 
 /** 结构性视图 */
@@ -112,7 +113,7 @@ export class Graph {
 
 
 
-    updateData(blocks: IBlockData[], lines: IBlockData[]) {
+    updateData(blocks: IBlockData[], lines: ILineData[]) {
         const sortedBlocks = this.preParentSort(blocks)
         sortedBlocks.forEach(block => {
             const shape = this.createShape(block)
@@ -246,5 +247,9 @@ export class Graph {
 
     }
 
+    /** 获取类 */
+    static getClassShape<T extends IClassBlockShape>(shapeType: string): T {
+        return this.graphicTypes.get(shapeType) as T
+    }
 
 }

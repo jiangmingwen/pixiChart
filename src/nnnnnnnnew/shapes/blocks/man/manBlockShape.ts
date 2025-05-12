@@ -1,5 +1,5 @@
 import { BlockShape } from "../blockShape";
-import { IBoundsPoint } from "../type";
+import type { IBoundsPoint } from "../type";
 
 export class ManBlockShape extends BlockShape {
     calcVisibleBounds(): IBoundsPoint {
@@ -16,7 +16,7 @@ export class ManBlockShape extends BlockShape {
     }
 
     drawShape() {
-        
+
     }
 
 }

@@ -1,5 +1,6 @@
 import { GlobalStyle } from "../../config/globalStyle";
-import { EHighlightMode, IHignlightStyle } from "./type";
+import type { IHignlightStyle } from "./type";
+import { EHighlightMode } from "./type";
 
 export const hignlightStyleConfig: Record<EHighlightMode, IHignlightStyle> = {
     [EHighlightMode.Base]: {

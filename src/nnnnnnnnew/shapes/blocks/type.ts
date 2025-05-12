@@ -1,4 +1,4 @@
-import { ContainerOptions, TextStyleFontStyle, TextStyleFontWeight } from "pixi.js"
+import type { ContainerOptions, TextStyleFontStyle, TextStyleFontWeight } from "pixi.js";
 
 
 export interface IBlockContainerOptions extends Omit<ContainerOptions, 'height' | 'width'>, IBlockShapeStyle, IBlockShapeSize {

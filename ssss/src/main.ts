@@ -92,7 +92,15 @@ import { RectBlockShape } from './nnnnnnnnew/shapes/blocks/rect/rectBlockShape';
 
   }
 
+  // const button1 = document.createElement('button')
+  // button1.innerText = '拖拽图元'
+  // button1.onmousedown = () => {
+  //   app.interactions.drag.setDragGraphType(RectBlockShape.shapeType)
+
+  // }
+
   document.getElementById('ppp')?.appendChild(button)
+  // document.getElementById('ppp')?.appendChild(button1)
 
 })();
 

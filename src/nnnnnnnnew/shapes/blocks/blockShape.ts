@@ -1,9 +1,11 @@
-import { Application, Assets, FillInput, PointData, Sprite, StrokeInput, StrokeStyle } from "pixi.js";
-import { BlockContainer } from "./blockContainer";
-import { GlobalStype } from "../../../core/shapes/GlobalStyle";
+import type { PointData } from 'pixi.js';
+import { Application, Assets, Sprite } from "pixi.js";
+import { GlobalStyle } from "../../config/globalStyle";
 import { Graph } from "../../graph/graph";
+import type { IPreviewData } from "../../interactions/drag/type";
 import { SEGraphics } from "../../pixiOverrides/graphics";
-import { IBlockShape, IBlockSize, IBoundsPoint } from "./type";
+import { BlockContainer } from "./blockContainer";
+import type { IBlockShape, IBlockSize, IBoundsPoint } from "./type";
 
 
 /** blockshape */
@@ -29,7 +31,7 @@ export abstract class BlockShape extends BlockContainer implements IBlockShape {
             x: 0,
             y: 0
         })
-        icon.roundRect(0, 0, GlobalStype.IconWidth, GlobalStype.IconHeight, 2)
+        icon.roundRect(0, 0, GlobalStyle.IconWidth, GlobalStyle.IconHeight, 2)
             .stroke({
                 width: 1,
                 color: 0x000000,
@@ -40,11 +42,14 @@ export abstract class BlockShape extends BlockContainer implements IBlockShape {
         return url
     }
 
-    /**  */
-    static preview(options: IBlockShape) {
+    /** 图形预览 */
+    static getPreviewGeometry(options: Omit<IPreviewData, 'graphType'>) {
         const graph = new SEGraphics()
         return graph
     }
+
+
+
 
     interactiveId: number = 0
 
@@ -74,7 +79,7 @@ export abstract class BlockShape extends BlockContainer implements IBlockShape {
         this.init()
     }
 
-  
+
 
     /** 计算可见图的外框 */
     abstract calcVisibleBounds(): IBoundsPoint
@@ -93,7 +98,7 @@ export abstract class BlockShape extends BlockContainer implements IBlockShape {
         })
     }
 
-  
+
 
     private onResize(data: Record<string, Partial<IBlockShape>>) {
         const changeData = data[this.id]

@@ -1,4 +1,4 @@
-import { PointData } from "pixi.js";
+import type { PointData } from "pixi.js";
 import { Graph } from "../../graph/graph";
 
 export class LineShape {

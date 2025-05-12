@@ -2,8 +2,8 @@ import { ActiveShapePlugin } from "../interactions/active/activePlugin"
 import { ConnectionPlugin } from "../interactions/connection/connectionPlugin"
 import { DragPlugin } from "../interactions/drag/dragPlugin"
 import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
-import { IBlockShape } from "../shapes/blocks/type"
-import { ILineShape } from "../shapes/lines/type"
+import type { IBlockShape } from "../shapes/blocks/type"
+import type { ILineShape } from "../shapes/lines/type"
 import type { Graph } from "./graph"
 
 export interface IGraphOptions {

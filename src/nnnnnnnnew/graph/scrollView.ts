@@ -1,9 +1,10 @@
 import { Viewport } from "pixi-viewport";
-import { Container, DestroyOptions, Graphics } from "pixi.js";
+import type { DestroyOptions } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
+import { GlobalStyle } from "../config/globalStyle";
 import { Graph } from "./graph";
 import { ScrollBar } from "./scrollBar";
-import { GlobalStyle } from "../config/globalStyle";
-import { IScrollViewOptions } from "./type";
+import type { IScrollViewOptions } from "./type";
 
 
 

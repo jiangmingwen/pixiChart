@@ -1,10 +1,13 @@
 import { FederatedPointerEvent } from "pixi.js";
-import { InteractionPlugin } from "../interactionPlugin";
-import { MaxLayer, GlobalStype } from "../../../core/shapes/GlobalStyle";
+import { GlobalStyle } from "../../config/globalStyle";
+import { SystemEventType } from "../../events/type";
+import { MaxLayer } from "../../graph/config";
+import { Graph } from "../../graph/graph";
+import { SEGraphics } from "../../pixiOverrides/graphics";
 import { BlockShape } from "../../shapes/blocks/blockShape";
-import { SystemEventType } from "../../utils/type";
 import { clamp } from "../../utils/utils";
-import { INestValidFn } from "./type";
+import { InteractionPlugin } from "../interactionPlugin";
+import type { INestValidFn, IPreviewData } from "./type";
 
 
 
@@ -28,12 +31,20 @@ export class DragPlugin extends InteractionPlugin {
     /** 鼠标拖动的基准图元 */
     baseShape?: BlockShape
 
+    /** 嵌套校验 */
     private nestValid?: INestValidFn
+
+    // /** 拖拽释放的图元校验 */
+    // private dropValid?: IDropValidFn
+
+    // /** 拖拽的图元类型  （从画布外拖进画布内）*/
+    // private dragGraphType?: string = ''
 
     init() {
         this.onDragEnd = this.onDragEnd.bind(this)
         this.onDragStart = this.onDragStart.bind(this)
         this.onDragMove = this.onDragMove.bind(this)
+        // this.onDragToGraph = this.onDragToGraph.bind(this)
         this.graph.app.stage.on('pointerdown', this.onDragStart)
         this.graph.app.stage.on('pointerup', this.onDragEnd)
         this.graph.app.stage.on('pointerupoutside', this.onDragEnd)
@@ -45,9 +56,53 @@ export class DragPlugin extends InteractionPlugin {
     }
 
 
+    // setDragGraphType(type: string) {
+    //     this.dragGraphType = type
+    //     this.graph.app.stage.on('pointermove', this.onDragToGraph)
+    //     window.addEventListener('mouseup',()=> {
+    //         this.dragGraphType = undefined
+    //         this.graph.app.stage.off('pointermove', this.onDragToGraph)
+    //     })
+
+    //     // this.graph.app.stage.on('pointerup', this.onDragEnd)
+    // }
+
+    // private onDragToGraph(event: FederatedPointerEvent){
+    //     const shape = this.graph.hitTest(event.globalX, event.globalY)
+    //     console.log(shape,'shape')
+    //     if(shape) {
+
+    //     }
+    // }
+    /** 预览图形 */
+    previewBox?: SEGraphics
+    /**
+     * 线上预览图形
+     * @param param0 预览参数
+     * @param x 
+     * @param y 
+     */
+    showPreview({ graphType, ...rest }: IPreviewData, x: number, y: number) {
+        if (!this.previewBox) {
+            const previewShape = Graph.getClassShape(graphType).getPreviewGeometry(rest)
+            this.previewBox = this.graph.app.stage.addChild(previewShape)
+        }
+        this.previewBox.x = x
+        this.previewBox.y = y
+    }
+
+    /** 隐藏预览图形 */
+    hidePreview() {
+        if (!this.previewBox) return
+        this.graph.app.stage.removeChild(this.previewBox)
+        this.previewBox = undefined
+    }
+
+
+
     private onDragStart(e: FederatedPointerEvent) {
-        if(this.interactions.connection.isConnecting) return
-        if (this.interactions.active.activedShapes.size === 0 ) return
+        if (this.interactions.connection.isConnecting) return
+        if (this.interactions.active.activedShapes.size === 0) return
         if (this.dragStartPosition) return
         this.graph.app.stage.on('pointermove', this.onDragMove)
     }
@@ -73,7 +128,7 @@ export class DragPlugin extends InteractionPlugin {
                 }
             }
         }
-        if(preParentId !== this.baseShape!.parentId) {
+        if (preParentId !== this.baseShape!.parentId) {
             this.graph.events.emit(SystemEventType.Nest, {
                 [this.baseShape!.id]: {
                     parentId: this.baseShape!.parentId,
@@ -177,8 +232,8 @@ export class DragPlugin extends InteractionPlugin {
             const parentId = this.getNestParent(this.baseShape!.id)
             const parent = this.graph.getShapeById(parentId ?? '')
             if (parent) {
-                const dwx = x - (parent.width - this.baseShape!.width - GlobalStype.SafePadding)
-                const dhy = y - (parent.height - this.baseShape!.height - GlobalStype.SafePadding)
+                const dwx = x - (parent.width - this.baseShape!.width - GlobalStyle.SafePadding)
+                const dhy = y - (parent.height - this.baseShape!.height - GlobalStyle.SafePadding)
                 const parentWidth = parent.width + dwx
                 const parentHeight = dhy > 0 ? parent.height + dhy : parent.height
                 parent.width = parentWidth
@@ -196,8 +251,8 @@ export class DragPlugin extends InteractionPlugin {
             const parent = this.graph.getParentShape(this.baseShape!.id)
             if (parent) {
                 const pointParent = parent.getGlobalPoint()
-                x = clamp(x,pointParent.x + GlobalStype.SafePadding,pointParent.x + parent.width - this.baseShape!.width - GlobalStype.SafePadding)
-                y = clamp(y,pointParent.y + GlobalStype.SafePadding,pointParent.y+ parent.height - this.baseShape!.height - GlobalStype.SafePadding)
+                x = clamp(x, pointParent.x + GlobalStyle.SafePadding, pointParent.x + parent.width - this.baseShape!.width - GlobalStyle.SafePadding)
+                y = clamp(y, pointParent.y + GlobalStyle.SafePadding, pointParent.y + parent.height - this.baseShape!.height - GlobalStyle.SafePadding)
             }
         }
 

@@ -1,9 +1,9 @@
 import { FederatedPointerEvent, Graphics } from "pixi.js";
-import { IValidFn, ShapeCache } from "./type";
-import { BlockShape } from "../../shapes/blocks/blockShape";
+import { SystemEventType } from "../../events/type";
 import { SEGraphics } from "../../pixiOverrides/graphics";
-import { SystemEventType } from "../../utils/type";
+import { BlockShape } from "../../shapes/blocks/blockShape";
 import { InteractionPlugin } from "../interactionPlugin";
+import type { IValidFn, ShapeCache } from "./type";
 
 
 export class ConnectionPlugin extends InteractionPlugin {
