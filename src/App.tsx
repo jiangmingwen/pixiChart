@@ -1,11 +1,36 @@
 import { useEffect, useRef } from 'react'
+import { v7 } from 'uuid'
 import './App.css'
+import { DrawTool } from './DrawTool'
 import type { IBlockData } from './nnnnnnnnew/graph/type'
 import { RectBlockShape } from './nnnnnnnnew/shapes/blocks/rect/rectBlockShape'
 import { RectWithAttrBlockShape } from './nnnnnnnnew/shapes/blocks/rectWithAttr/rectWithAttrBlockShape'
 import { RectWithHeaderBlockShape } from './nnnnnnnnew/shapes/blocks/rectWithHeader/rectWithHeaderBlockShape'
+import type { IPointData } from './nnnnnnnnew/type'
 import type { IReactPixichartInstance } from './reactPixichart'
+import type { IDragData } from './reactPixichart/dragDrop/type'
 import { ReactPixiChart } from './reactPixichart/reactPixichart'
+
+
+function createBlockData(data: IDragData, position: IPointData, parentId?: string) {
+  const blockData: IBlockData = {
+    id: v7(),
+    x: position.x,
+    y: position.y,
+    width: 120,
+    height: 60,
+    zIndex: 1,
+    graphType: data.graphType,
+    label: data.key,
+    stereotype: data.key,
+    stereotypeVisible: true
+  }
+  if (parentId) {
+    blockData.parentId = parentId
+  }
+  return blockData
+}
+
 
 
 
@@ -75,9 +100,21 @@ function App() {
   }, [])
 
   return (
-    <>
-      <ReactPixiChart diagramId='diagramId' ref={graphRef} />
-    </>
+    <div style={{ width: '100%', height: '100%' }}>
+      <div style={{ height: 80 }}>
+        <button>连线</button>
+        <DrawTool />
+      </div>
+      <div style={{ height: 'calc(100% - 80px)' }} >
+        <ReactPixiChart
+          diagramId='diagramId'
+          ref={graphRef}
+          onDragToGraph={(data, position, parentId) => {
+            graphRef.current?.compositeUpdateBlocksAndLines({ blocks: [createBlockData(data, position, parentId)], lines: [] })
+          }}
+        />
+      </div>
+    </div>
   )
 }
 

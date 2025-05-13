@@ -45,11 +45,9 @@ export abstract class BlockShape extends BlockContainer implements IBlockShape {
     /** 图形预览 */
     static getPreviewGeometry(options: Omit<IPreviewData, 'graphType'>) {
         const graph = new SEGraphics()
+        graph.rect(0, 0, 120 * (options.scale ?? 1), 60 * (options.scale ?? 1)).stroke({ width: 1, color: GlobalStyle.strokeColor })
         return graph
     }
-
-
-
 
     interactiveId: number = 0
 

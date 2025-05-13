@@ -55,25 +55,6 @@ export class DragPlugin extends InteractionPlugin {
         this.nestValid = fn
     }
 
-
-    // setDragGraphType(type: string) {
-    //     this.dragGraphType = type
-    //     this.graph.app.stage.on('pointermove', this.onDragToGraph)
-    //     window.addEventListener('mouseup',()=> {
-    //         this.dragGraphType = undefined
-    //         this.graph.app.stage.off('pointermove', this.onDragToGraph)
-    //     })
-
-    //     // this.graph.app.stage.on('pointerup', this.onDragEnd)
-    // }
-
-    // private onDragToGraph(event: FederatedPointerEvent){
-    //     const shape = this.graph.hitTest(event.globalX, event.globalY)
-    //     console.log(shape,'shape')
-    //     if(shape) {
-
-    //     }
-    // }
     /** 预览图形 */
     previewBox?: SEGraphics
     /**
@@ -82,13 +63,26 @@ export class DragPlugin extends InteractionPlugin {
      * @param x 
      * @param y 
      */
-    showPreview({ graphType, ...rest }: IPreviewData, x: number, y: number) {
+    showPreview(x: number, y: number, previewData?: IPreviewData, isClientPosition?: boolean) {
         if (!this.previewBox) {
-            const previewShape = Graph.getClassShape(graphType).getPreviewGeometry(rest)
-            this.previewBox = this.graph.app.stage.addChild(previewShape)
+            if (previewData) {
+                this.previewBox = Graph.getClassShape(previewData.graphType).getPreviewGeometry(previewData)
+            } else {
+                // 默认预览图元
+                this.previewBox = BlockShape.getPreviewGeometry({} as any)
+            }
+            this.graph.app.stage.addChild(this.previewBox)
         }
-        this.previewBox.x = x
-        this.previewBox.y = y
+
+        if (isClientPosition) {
+            const position = this.graph.covertClientPositionToGlobalPosition(x, y)
+            this.previewBox.x = position.globalX
+            this.previewBox.y = position.globalY
+        } else {
+            this.previewBox.x = x
+            this.previewBox.y = y
+        }
+
     }
 
     /** 隐藏预览图形 */
@@ -262,9 +256,14 @@ export class DragPlugin extends InteractionPlugin {
         }
     }
 
-
-    private getNestParent(id: string): string | undefined {
-        let parent = this.graph.getParentShape(id)
+    /**
+     * 获取允许嵌套的父级
+     * @param id 
+     * @param isSkip 是否跳过当前id的图元
+     * @returns 
+     */
+    getNestParent(id: string, isSkip = true): string | undefined {
+        let parent = isSkip ? this.graph.getParentShape(id) : this.graph.getShapeById(id)
         // 如果不校验，父图元直接可以嵌套
         if (!this.nestValid) return parent?.id
         while (!!parent) {
@@ -276,7 +275,23 @@ export class DragPlugin extends InteractionPlugin {
         return undefined
     }
 
-
+    /**
+     * 根据拖拽的类型获取嵌套的父图元
+     * @param type 拖拽的类型
+     * @param parentId 父图元
+     * @returns 
+     */
+    getNestParentByType(type: string, parentId?: string) {
+        if (!this.nestValid || !parentId) return parentId
+        let parent = this.graph.getShapeById(parentId)
+        while (!!parent) {
+            const validate = this.nestValid(type, parent.id)
+            if (validate) return parent.id
+            // 继续查找可以嵌套的父图元
+            parent = this.graph.getParentShape(parent.id)
+        }
+        return undefined
+    }
 
     destroy() {
         this.graph.app.stage.off('pointerdown', this.onDragStart)

@@ -1,12 +1,52 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { Graph } from "../nnnnnnnnew/graph/graph";
+import { useDrop } from "./dragDrop/dragDropHook";
 import type { IReactPixichartInstance, IReactPixichartProps, IUpdateData } from "./type";
 
 export const ReactPixiChart = forwardRef<IReactPixichartInstance, IReactPixichartProps>(({
-    diagramId
+    diagramId,
+    getPreviewData,
+    onDragToGraph
 }, ref) => {
-    const domRef = useRef<HTMLDivElement>(null);
+
     const graphRef = useRef<Graph>(null);
+    const nestParentRef = useRef<string | undefined>(undefined)
+    const domRef = useDrop({
+        onDragEnd: (data, event) => {
+            if (!graphRef.current || !domRef.current) return
+            graphRef.current.interactions.hignlight.hideNest()
+            graphRef.current.interactions.drag.hidePreview()
+            const position = graphRef.current.getRelativePosition(event, nestParentRef.current)
+            onDragToGraph?.(data, position, nestParentRef.current)
+        },
+        onDragHover: (data, event) => {
+            if (!graphRef.current || !domRef.current) return
+            graphRef.current.interactions.drag.showPreview(event.clientX, event.clientY, getPreviewData?.(data), true)
+            if (graphRef.current.interactions.drag.previewBox) {
+                // 探测坐标上的图元之前需要把预览图形隐藏起来
+                graphRef.current.interactions.drag.previewBox.visible = false
+            }
+            const shape = graphRef.current.hitTestByClientPosition(event.clientX, event.clientY)
+            if (graphRef.current.interactions.drag.previewBox) {
+                graphRef.current.interactions.drag.previewBox.visible = true
+            }
+            // 探测到拖拽到已有图元上，需要进行嵌套高亮转换
+            if (shape) {
+                const nestShape = graphRef.current.interactions.drag.getNestParentByType(data.key, shape.id)
+                nestParentRef.current = nestShape
+                if (nestShape) {
+                    graphRef.current.interactions.hignlight.showNest(nestShape)
+                } else {
+                    graphRef.current.interactions.hignlight.hideNest()
+                }
+            } else {
+                graphRef.current.interactions.hignlight.hideNest()
+                nestParentRef.current = undefined
+            }
+
+        }
+    })
+
     const isLoaded = useRef(false);
     const dataQueue = useRef<IUpdateData[]>([]);
 

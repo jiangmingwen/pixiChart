@@ -9,7 +9,7 @@ import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
 import { SEContainer } from "../pixiOverrides/container"
 import { BlockShape } from "../shapes/blocks/blockShape"
 import { LineShape } from "../shapes/lines/lineShape"
-import type { IClassBlockShape } from "../type"
+import type { IClassBlockShape, IPointData } from "../type"
 import { ScrollView } from "./scrollView"
 import type { IBlockData, IGraphOptions, IInteractions, ILineData } from "./type"
 
@@ -72,6 +72,38 @@ export class Graph {
         }
     }
 
+    /**
+     * 获取窗口坐标下的图元
+     * @param clientX clientX
+     * @param clientY clientY
+     * @returns 
+     */
+    hitTestByClientPosition(clientX: number, clientY: number) {
+        const { globalX, globalY } = this.covertClientPositionToGlobalPosition(clientX, clientY)
+        return this.hitTest(globalX, globalY)
+    }
+    /**  获取 窗口坐标下相对于指定父图元的相对坐标
+     *  @param clientPosition 窗口坐标
+     *  @param parentId 父图元id
+     */
+    getRelativePosition(clientPosition: { clientX: number, clientY: number }, parentId?: string): IPointData {
+        const globalPosition = this.covertClientPositionToGlobalPosition(clientPosition.clientX, clientPosition.clientY)
+        if (!parentId) return {
+            x: globalPosition.globalX,
+            y: globalPosition.globalY
+        }
+        const shape = this.getShapeById(parentId)
+        if (!shape) return {
+            x: globalPosition.globalX,
+            y: globalPosition.globalY
+        }
+        const parentAbs = this.interactions.connection.getAbsolutePosition(shape)
+        return {
+            x: globalPosition.globalX - parentAbs.x,
+            y: globalPosition.globalY - parentAbs.y
+        }
+    }
+
     preParentSort(blocks: IBlockData[]): IBlockData[] {
         // 1. 构建映射
         const blockMap = new Map<string, IBlockData>();       // ID → Block
@@ -111,7 +143,15 @@ export class Graph {
         return result;
     }
 
-
+    /** 转换窗口坐标为画布全局坐标
+     * @param clientX clientX
+     * @param clientY clientY
+     */
+    covertClientPositionToGlobalPosition(clientX: number, clientY: number) {
+        const globalX = clientX - this.root.offsetLeft
+        const globalY = clientY - this.root.offsetTop
+        return { globalX, globalY }
+    }
 
     updateData(blocks: IBlockData[], lines: ILineData[]) {
         const sortedBlocks = this.preParentSort(blocks)
