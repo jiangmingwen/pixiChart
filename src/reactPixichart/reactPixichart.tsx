@@ -6,7 +6,8 @@ import type { IReactPixichartInstance, IReactPixichartProps, IUpdateData } from 
 export const ReactPixiChart = forwardRef<IReactPixichartInstance, IReactPixichartProps>(({
     diagramId,
     getPreviewData,
-    onDragToGraph
+    onDragToGraph,
+    onConnectEnd
 }, ref) => {
 
     const graphRef = useRef<Graph>(null);
@@ -51,14 +52,15 @@ export const ReactPixiChart = forwardRef<IReactPixichartInstance, IReactPixichar
     const dataQueue = useRef<IUpdateData[]>([]);
 
     useImperativeHandle(ref, () => ({
-
+        graph: graphRef as { current: Graph },
         compositeUpdateBlocksAndLines: (data: IUpdateData) => {
             if (isLoaded.current) {
                 graphRef.current?.updateData(data.blocks, data.lines)
             } else {
                 dataQueue.current.push(data)
             }
-        }
+        },
+
     }), [])
 
 
@@ -81,6 +83,8 @@ export const ReactPixiChart = forwardRef<IReactPixichartInstance, IReactPixichar
                 })
                 dataQueue.current = []
             })
+
+            graphRef.current.listeners.onConnectEnd = onConnectEnd
         }
 
     }, [])

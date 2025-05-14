@@ -1,3 +1,4 @@
+import type { PointData } from "pixi.js";
 
 export interface ILineShape {
     /** 起点shape */
@@ -14,5 +15,7 @@ export interface ILineShape {
     entryY?: number
     /** 线终点在终点shape上x偏移量 */
     elementType?: string
+    /** 折点坐标 */
+    points?: PointData[]
 
 }

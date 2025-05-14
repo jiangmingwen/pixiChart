@@ -9,9 +9,9 @@ import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
 import { SEContainer } from "../pixiOverrides/container"
 import { BlockShape } from "../shapes/blocks/blockShape"
 import { LineShape } from "../shapes/lines/lineShape"
-import type { IClassBlockShape, IPointData } from "../type"
+import type { IClassBlockShape, IClassLineShape, IPointData } from "../type"
 import { ScrollView } from "./scrollView"
-import type { IBlockData, IGraphOptions, IInteractions, ILineData } from "./type"
+import type { IBlockData, IGraphListeners, IGraphOptions, IInteractions, ILineData } from "./type"
 
 
 /** 结构性视图 */
@@ -36,6 +36,8 @@ export class Graph {
     interactions!: IInteractions
 
     events!: SystemEvent
+    /** 事件监听 */
+    listeners: IGraphListeners = {}
 
     /** 画布的缩放比例 */
     get scale() {
@@ -160,6 +162,10 @@ export class Graph {
             const parentShape = this.idMapBlocks.get(block.parentId ?? '')
             this.addChild(shape, parentShape)
         })
+        lines.forEach(line => {
+            const shape = this.createShape(line)
+            this.addLine(shape)
+        })
     }
 
     getShapeById(id: number | string) {
@@ -181,19 +187,20 @@ export class Graph {
         } else {
             this.scrollView.removeChild(shape)
         }
-        this.idMapBlocks.delete(shape.uid)
+        this.idMapBlocks.delete(shape.id)
     }
 
     addLine(shape: any) {
+        console.log(shape, 'sssssssssss')
         this.scrollView.add(shape)
-        this.idMapLines.set(shape.uid, shape)
+        this.idMapLines.set(shape.id, shape)
     }
 
     removeLine(shape: any) {
-        const line = this.idMapLines.get(shape.uid)
+        const line = this.idMapLines.get(shape.id)
         if (!line) return
         this.scrollView.removeChild(line as any)
-        this.idMapLines.delete(shape.uid)
+        this.idMapLines.delete(shape.id)
     }
 
     async init(options?: Partial<ApplicationOptions>) {
@@ -216,13 +223,14 @@ export class Graph {
     }
 
     /** 创建shape */
-    createShape<T extends BlockShape = any>(config: IBlockData) {
+    createShape<T extends BlockShape | LineShape = any>(config: IBlockData | ILineData) {
         const GraphicClass = Graph.graphicTypes.get(config.graphType);
         if (!GraphicClass) throw new Error(`Unregistered graphic type: ${config.graphType}`);
         //@ts-ignore
         const shape = new GraphicClass(this, config) as unknown as T; // 默认抽象类已经都实现
         return shape
     }
+
 
     /** 导出图片 */
     exportImg() {
@@ -245,13 +253,13 @@ export class Graph {
 
 
     /** 已注册的图形存放库 */
-    private static graphicTypes: Map<string, typeof BlockShape> = new Map();
+    private static graphicTypes: Map<string, IClassBlockShape | IClassLineShape> = new Map();
     /**
      * 注册图形方法
      * @param shape 注册的图形 shape | shape[]
      * @returns 
      */
-    static registerShape(shape: IClassBlockShape | IClassBlockShape[]) {
+    static registerShape(shape: IClassBlockShape | IClassLineShape | IClassBlockShape[] | IClassLineShape[]) {
         if (Array.isArray(shape)) {
             shape.forEach(this.__registrerShape.bind(this))
         } else {
@@ -259,12 +267,14 @@ export class Graph {
         }
         return this
     }
+
+
     /**
      * 
      * @param shape 注册单个图形方法
      * @returns 
      */
-    private static __registrerShape<T extends IClassBlockShape>(shape: T) {
+    private static __registrerShape<T extends IClassBlockShape | IClassLineShape>(shape: T) {
         if (this.graphicTypes.has(shape.shapeType)) throw new Error(`Shape has already been registered: ${shape.shapeType}`);
         this.graphicTypes.set(shape.shapeType, shape);
         return this

@@ -70,3 +70,14 @@ export interface ShapeCache {
      */
     invHeight: number;
 }
+
+export interface IConnectData {
+    sourceId: string;
+    entryX: number;
+    entryY: number;
+    exitX: number;
+    exitY: number;
+    elementType: string;
+    targetId: string;
+}
+

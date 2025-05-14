@@ -26,11 +26,13 @@ export class SystemEvent {
         return this
     }
 
-    end() {
+    end(cb?: (blockdata: Record<string, Partial<IBlockShape>>, lineData: Record<string, Partial<ILineShape>>) => void) {
         if (--this.batchCount <= 0) {
             console.log('end :blockUpdate', this.blockUpdate)
             console.log('end :lineUpdate', this.lineUpdate)
         }
+        cb?.(this.blockUpdate, this.lineUpdate)
+        return this
         // this.blockUpdate.clear();
     }
 

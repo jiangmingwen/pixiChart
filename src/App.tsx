@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { v7 } from 'uuid'
 import './App.css'
 import { DrawTool } from './DrawTool'
-import type { IBlockData } from './nnnnnnnnew/graph/type'
+import type { IBlockData, ILineData } from './nnnnnnnnew/graph/type'
+import type { IConnectData } from './nnnnnnnnew/interactions/connection/type'
 import { RectBlockShape } from './nnnnnnnnew/shapes/blocks/rect/rectBlockShape'
 import { RectWithAttrBlockShape } from './nnnnnnnnew/shapes/blocks/rectWithAttr/rectWithAttrBlockShape'
 import { RectWithHeaderBlockShape } from './nnnnnnnnew/shapes/blocks/rectWithHeader/rectWithHeaderBlockShape'
@@ -31,6 +32,21 @@ function createBlockData(data: IDragData, position: IPointData, parentId?: strin
   return blockData
 }
 
+
+function createLineData(data: IConnectData) {
+  const lineData: ILineData = {
+    id: v7(),
+    sourceId: data.sourceId,
+    entryX: data.entryX,
+    entryY: data.entryY,
+    exitX: data.exitX,
+    exitY: data.exitY,
+    graphType: data.elementType,
+    targetId: data.targetId
+  }
+  console.log(JSON.stringify(lineData))
+  return lineData
+}
 
 
 
@@ -95,14 +111,29 @@ function App() {
       }
     ] as IBlockData[]
 
-    graphRef.current?.compositeUpdateBlocksAndLines({ blocks, lines: [] })
+    const lines: ILineData[] = [
+      {
+        "id": "0196cdec-81d1-75cc-9a33-64579be85235",
+        "sourceId": "112345",
+        "entryX": 0,
+        "entryY": 0.30701754385964936,
+        "exitX": 0.8547717842323652,
+        "exitY": 1,
+        "graphType": "StraightLineShape",
+        "targetId": "1234"
+      }
+    ]
+
+    graphRef.current?.compositeUpdateBlocksAndLines({ blocks, lines })
 
   }, [])
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <div style={{ height: 80 }}>
-        <button>连线</button>
+        <button onClick={() => {
+          graphRef.current?.graph.current.interactions.connection.ready('StraightLineShape')
+        }}>连线</button>
         <DrawTool />
       </div>
       <div style={{ height: 'calc(100% - 80px)' }} >
@@ -111,6 +142,9 @@ function App() {
           ref={graphRef}
           onDragToGraph={(data, position, parentId) => {
             graphRef.current?.compositeUpdateBlocksAndLines({ blocks: [createBlockData(data, position, parentId)], lines: [] })
+          }}
+          onConnectEnd={data => {
+            graphRef.current?.compositeUpdateBlocksAndLines({ blocks: [], lines: [createLineData(data)] })
           }}
         />
       </div>

@@ -1,5 +1,6 @@
 import { ActiveShapePlugin } from "../interactions/active/activePlugin"
 import { ConnectionPlugin } from "../interactions/connection/connectionPlugin"
+import type { IConnectData } from "../interactions/connection/type"
 import { DragPlugin } from "../interactions/drag/dragPlugin"
 import { HignlightPlugin } from "../interactions/hignlight/hignlightPlugin"
 import type { IBlockShape } from "../shapes/blocks/type"
@@ -59,6 +60,7 @@ export interface IBlockData extends IBlockShape {
 
 export interface ILineData extends ILineShape {
     graphType: string
+    id: string
 }
 
 
@@ -67,5 +69,9 @@ export interface IInteractions {
     hignlight: HignlightPlugin
     connection: ConnectionPlugin
     active: ActiveShapePlugin
+}
 
+
+export interface IGraphListeners {
+    onConnectEnd?: (lineData: IConnectData) => void
 }

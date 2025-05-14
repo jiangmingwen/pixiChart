@@ -3,7 +3,7 @@ import { SystemEventType } from "../../events/type";
 import { SEGraphics } from "../../pixiOverrides/graphics";
 import { BlockShape } from "../../shapes/blocks/blockShape";
 import { InteractionPlugin } from "../interactionPlugin";
-import type { IValidFn, ShapeCache } from "./type";
+import type { IConnectData, IValidFn, ShapeCache } from "./type";
 
 
 export class ConnectionPlugin extends InteractionPlugin {
@@ -386,7 +386,7 @@ export class ConnectionPlugin extends InteractionPlugin {
         this.graph.app.stage.off('mousemove', this.onConnectProcess)
         this.interactions.hignlight.hideConnecting()
         this._isConnecting = false
-
+        if (this.previewLine) this.graph.app.stage.removeChild(this.previewLine)
         this.graph.events.begin()
             .emit(SystemEventType.Connect, undefined, {
                 ['new1']: {
@@ -398,9 +398,11 @@ export class ConnectionPlugin extends InteractionPlugin {
                     elementType: this.connectingType,
                     targetId: this.targetData.id
                 }
-            }).end()
-        // const shape = this.graph.hitTest(event.globalX, event.globalY) as SEContainer
-        // console.log('onConnectEnd', shape)
+            }).end((_blocks, lines) => {
+                this.graph.listeners.onConnectEnd?.(lines['new1'] as IConnectData)
+            })
+
+
 
     }
 
